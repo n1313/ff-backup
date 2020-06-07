@@ -7,7 +7,7 @@ const request = (method, url, options = {}) => {
     ...requestParams,
   };
 
-  console.debug('Sending', method, url);
+  // console.debug('Sending', method, url);
 
   return new Promise((resolve, reject) => {
     const req = https.request(url, requestConfig, (res) => {

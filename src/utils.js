@@ -1,4 +1,8 @@
+const path = require('path');
 const fs = require('fs');
+
+const config = require('../config.json');
+const credentials = require('../credentials.json');
 
 const writeJSON = (filePath, obj) => {
   const string = JSON.stringify(obj, null, 2);
@@ -9,7 +13,47 @@ const writeFile = (filePath, string) => {
   return fs.writeFileSync(filePath, string, 'UTF-8');
 };
 
+const readJSON = (filePath) => {
+  return JSON.parse(readFile(filePath));
+};
+
+const readFile = (filePath) => {
+  return fs.readFileSync(filePath, 'UTF-8');
+};
+
+const getDataFolder = () => {
+  const serverFolder = config.server.split('//')[1];
+  return path.resolve(__dirname, '..', config.dataFolder, serverFolder, credentials.username);
+};
+
+const writeAPIData = (filePath, data) => {
+  // console.log('Writing to', filePath);
+  const absPath = path.resolve(getDataFolder(), filePath);
+  const dirname = path.dirname(absPath);
+  const basename = path.basename(absPath);
+  fs.mkdirSync(dirname, { recursive: true });
+  return writeJSON(absPath, data);
+};
+
+const readStoredAPIData = (filePath) => {
+  // console.log('Reading from', filePath);
+  const absPath = path.resolve(getDataFolder(), filePath);
+  try {
+    fs.accessSync(absPath, fs.constants.R_OK);
+    return readJSON(absPath);
+  } catch (err) {
+    return {};
+  }
+};
+
+const isValidSession = (session) => {
+  return (
+    session && !session.err && session.users && session.users.username === credentials.username && session.authToken
+  );
+};
+
 module.exports = {
-  writeJSON,
-  writeFile,
+  writeAPIData,
+  readStoredAPIData,
+  isValidSession,
 };
