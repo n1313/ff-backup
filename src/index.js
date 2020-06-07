@@ -1,9 +1,7 @@
-const path = require('path');
-const fs = require('fs');
-
 const credentials = require('../credentials.json');
 const config = require('../config.json');
 const api = require('./api.js');
+const writer = require('./writer.js');
 
 const startTime = new Date();
 
@@ -14,11 +12,11 @@ if (!credentials.username || !credentials.password) {
   console.log(`Hello, ${credentials.username}!`);
 }
 
-if (!config.target) {
-  console.error('Error: Invalid target, please update ./src/config.json with valid target URL.');
+if (!config.server) {
+  console.error('Error: Invalid server, please update ./src/config.json with valid server URL.');
   process.exit(1);
 } else {
-  console.log(`Targeting ${config.target}`);
+  console.log(`Targeting ${config.server}`);
 }
 
 async function main() {
@@ -26,7 +24,8 @@ async function main() {
   const session = await api.postSession();
 
   if (session && !session.err && session.users.username === credentials.username && session.authToken) {
-    console.log('Success!' /*, session.authToken*/);
+    console.log('Success!');
+    writer.writeAPIData('session.json', session);
     return session;
   } else {
     console.error('Error: Cannot authenticate, check your username and password.');
