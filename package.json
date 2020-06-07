@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "clean": "rm -rf ./data",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

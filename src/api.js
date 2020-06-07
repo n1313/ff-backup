@@ -4,7 +4,7 @@ const credentials = require('../credentials.json');
 const config = require('../config.json');
 const request = require('./request.js');
 
-const postSession = async () => {
+const retrieveSession = async () => {
   const url = `${config.server}/v1/session`;
   const body = querystring.stringify({
     username: credentials.username,
@@ -12,10 +12,17 @@ const postSession = async () => {
   });
   const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
   const data = await request.post(url, { body, headers });
-  console.log('data', data);
+  return data;
+};
+
+const retrievePosts = async (session, offset) => {
+  const url = `${config.server}/v2/timelines/${credentials.username}?sort=created&offset=${offset}`;
+  const headers = { Authorization: `Bearer ${session.authToken}` };
+  const data = await request.get(url, { headers });
   return data;
 };
 
 module.exports = {
-  postSession,
+  retrieveSession,
+  retrievePosts,
 };

@@ -6,6 +6,7 @@ const config = require('../config.json');
 const credentials = require('../credentials.json');
 
 const writeAPIData = (filePath, data) => {
+  console.log('Writing to', filePath);
   const serverFolder = config.server.split('//')[1];
   const absPath = path.resolve(__dirname, '..', config.dataFolder, serverFolder, credentials.username, filePath);
   const dirname = path.dirname(absPath);
