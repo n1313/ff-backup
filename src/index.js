@@ -5,6 +5,9 @@ const utils = require('./utils.js');
 
 const startTime = new Date();
 
+const SESSION_FILE = 'user.json';
+const TIMELINE_FILE = 'timeline.json';
+
 if (!credentials.username || !credentials.password) {
   console.error('Error: Invalid credentials, please update ./src/credentials.json with your username and password.');
   process.exit(1);
@@ -20,7 +23,7 @@ if (!config.server) {
 }
 
 const authenticate = async () => {
-  const storedSession = utils.readStoredAPIData('session.json');
+  const storedSession = utils.readStoredAPIData(SESSION_FILE);
 
   if (utils.isValidSession(storedSession)) {
     console.log(`Got stored session data for ${credentials.username}!`);
@@ -28,11 +31,11 @@ const authenticate = async () => {
   }
 
   console.log(`Trying to authenticate as ${credentials.username}...`);
-  const sessionResponse = await api.retrieveSession();
+  const sessionResponse = await api.retrieveUser();
 
   if (utils.isValidSession(sessionResponse)) {
     console.log('Success!');
-    utils.writeAPIData('session.json', sessionResponse);
+    utils.writeAPIData(SESSION_FILE, sessionResponse);
     return sessionResponse;
   }
 
@@ -41,51 +44,95 @@ const authenticate = async () => {
   process.exit(1);
 };
 
-const getPostsIndex = async (session) => {
-  const downloadedPosts = {
+const getPostsTimeline = async (session) => {
+  const timeline = {
+    users: {},
+    comments: {},
+    attachments: {},
     posts: {},
     isLastPage: false,
   };
 
-  const storedPosts = utils.readStoredAPIData('posts.json');
-  if (storedPosts.posts) {
-    if (storedPosts.isLastPage) {
-      console.log('Got full stored posts index,', Object.keys(storedPosts.posts).length, 'posts!');
-      return storedPosts;
+  const storedTimeline = utils.readStoredAPIData(TIMELINE_FILE);
+  if (storedTimeline.posts) {
+    if (storedTimeline.isLastPage) {
+      console.log('Got full stored posts index,', Object.keys(storedTimeline.posts).length, 'posts!');
+      return storedTimeline;
     } else {
-      console.log('Got partial stored posts index,', Object.keys(storedPosts.posts).length, 'posts!');
-      downloadedPosts.posts = storedPosts.posts;
+      console.log('Got partial stored posts index,', Object.keys(storedTimeline.posts).length, 'posts!');
+      downloadedPosts.posts = storedTimeline.posts;
     }
   }
 
-  console.log('Downloading posts index, expecting to see', Number(session.users.statistics.posts), 'posts...');
+  const expectedNumberOfPosts = Number(session.users.statistics.posts);
+  console.log('Downloading posts index, expecting to see', expectedNumberOfPosts, 'posts...');
 
-  while (!downloadedPosts.isLastPage) {
-    const offset = Object.keys(downloadedPosts.posts).length;
-    const postsResponse = await api.retrievePosts(session, offset);
-    downloadedPosts.isLastPage = postsResponse.isLastPage;
-    postsResponse.posts.forEach((post) => {
-      downloadedPosts.posts[post.id] = post;
+  while (!timeline.isLastPage) {
+    const offset = Object.keys(timeline.posts).length;
+    const timelineResponse = await api.retrievePosts(session, offset);
+    timeline.isLastPage = timelineResponse.isLastPage;
+    timelineResponse.posts.forEach((post) => {
+      timeline.posts[post.id] = post;
     });
-    console.log('Got', Object.keys(downloadedPosts.posts).length, 'posts...');
-    utils.writeAPIData('posts.json', downloadedPosts);
+    timelineResponse.users.forEach((user) => {
+      timeline.users[user.id] = user;
+    });
+    timelineResponse.comments.forEach((comment) => {
+      timeline.comments[comment.id] = comment;
+    });
+    timelineResponse.attachments.forEach((attachment) => {
+      timeline.attachments[attachment.id] = attachment;
+    });
+    const numberOfDownloadedPosts = Object.keys(timeline.posts).length;
+    utils.progressMessage(`Got ${numberOfDownloadedPosts}/${expectedNumberOfPosts}...`);
+    utils.writeAPIData(TIMELINE_FILE, timeline);
   }
 
   console.log('Downloaded all available posts!');
-  return downloadedPosts;
+  return timeline;
+};
+
+const hydratePosts = async (session, timeline) => {
+  const postsWithMissingInfo = Object.values(timeline.posts).filter((post) => {
+    return post.omittedComments > 0 || post.omittedLikes > 0;
+  });
+
+  console.log('Downloading likes and comments for', postsWithMissingInfo.length, 'posts...');
+
+  let i = 0;
+
+  for (post of postsWithMissingInfo) {
+    const fullPost = await api.retrieveFullPost(session, post);
+    timeline.posts[post.id] = fullPost;
+    fullPost.users.forEach((user) => {
+      timeline.users[user.id] = user;
+    });
+    fullPost.comments.forEach((comment) => {
+      timeline.comments[comment.id] = comment;
+    });
+    fullPost.attachments.forEach((attachment) => {
+      timeline.attachments[attachment.id] = attachment;
+    });
+    utils.progressMessage(`Got ${++i}/${postsWithMissingInfo.length}...`);
+    utils.writeAPIData(TIMELINE_FILE, timeline);
+  }
+
+  console.log('All posts ready!');
+  return timeline;
 };
 
 const main = async () => {
   const data = {};
 
   data.session = await authenticate();
-  data.posts = await getPostsIndex(data.session);
+  data.timeline = await getPostsTimeline(data.session);
+  data.timeline = await hydratePosts(data.session, data.timeline);
 };
 
 main()
   .then(() => {
     const endTime = new Date();
-    console.log(`Done, took ${endTime - startTime}ms`);
+    console.log(`Done, took ${endTime - startTime} ms`);
   })
   .catch((err) => {
     console.error(err);

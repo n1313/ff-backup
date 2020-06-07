@@ -4,7 +4,7 @@ const credentials = require('../credentials.json');
 const config = require('../config.json');
 const request = require('./request.js');
 
-const retrieveSession = async () => {
+const retrieveUser = async () => {
   const url = `${config.server}/v1/session`;
   const body = querystring.stringify({
     username: credentials.username,
@@ -22,7 +22,15 @@ const retrievePosts = async (session, offset) => {
   return data;
 };
 
+const retrieveFullPost = async (session, post) => {
+  const url = `${config.server}/v2/posts/${post.id}?maxComments=all&maxLikes=`;
+  const headers = { Authorization: `Bearer ${session.authToken}` };
+  const data = await request.get(url, { headers });
+  return data;
+};
+
 module.exports = {
-  retrieveSession,
+  retrieveUser,
   retrievePosts,
+  retrieveFullPost,
 };

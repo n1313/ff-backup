@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const readline = require('readline');
 
 const config = require('../config.json');
 const credentials = require('../credentials.json');
@@ -52,8 +53,15 @@ const isValidSession = (session) => {
   );
 };
 
+const progressMessage = (message) => {
+  readline.clearLine(process.stdout);
+  readline.cursorTo(process.stdout, 0);
+  process.stdout.write(message);
+};
+
 module.exports = {
   writeAPIData,
   readStoredAPIData,
   isValidSession,
+  progressMessage,
 };
