@@ -1,31 +1,25 @@
 const https = require('https');
 
-const request = (method, url, params = {}) => {
-  const requestUrl = new URL(url);
-  const { body, ...requestParams } = params;
+const request = (method, url, options = {}) => {
+  const { body, ...requestParams } = options;
+  const requestConfig = {
+    method,
+    ...requestParams,
+  };
+
+  // console.debug('Sending', method, 'request to', url, 'with', requestConfig, 'and', body);
 
   return new Promise((resolve, reject) => {
-    const req = https.request(
-      {
-        method,
-        ...requestUrl,
-        ...requestParams,
-      },
-      (res) => {
-        const chunks = [];
-        res.on('data', (data) => chunks.push(data));
-        res.on('end', () => {
-          let body = Buffer.concat(chunks);
-          switch (res.headers['content-type']) {
-            case 'application/json':
-              body = JSON.parse(body);
-              break;
-          }
-          resolve(body);
-        });
-      }
-    );
+    const req = https.request(url, requestConfig, (res) => {
+      const chunks = [];
+      res.on('data', (data) => chunks.push(data));
+      res.on('end', () => {
+        const body = JSON.parse(Buffer.concat(chunks));
+        resolve(body);
+      });
+    });
     req.on('error', reject);
+
     if (body) {
       req.write(body);
     }
@@ -33,9 +27,9 @@ const request = (method, url, params = {}) => {
   });
 };
 
-const get = (url) => request('GET', url);
+const get = (url, options) => request('GET', url, options);
 
-const post = (url, payload) => request('POST', url, payload);
+const post = (url, options) => request('POST', url, options);
 
 module.exports = {
   get,

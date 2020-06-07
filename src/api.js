@@ -1,12 +1,20 @@
+const querystring = require('querystring');
+
 const credentials = require('../credentials.json');
 const config = require('../config.json');
-const api = require('./api.js');
+const request = require('./request.js');
 
-/*
-const whoAmI = async () => {
-  const url = `${config.target}`
-  const data = await api.get()
-}
-*/
+const postSession = async () => {
+  const url = `${config.target}/v1/session`;
+  const body = querystring.stringify({
+    username: credentials.username,
+    password: credentials.password,
+  });
+  const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  const data = await request.post(url, { body, headers });
+  return data;
+};
 
-module.exports = {};
+module.exports = {
+  postSession,
+};

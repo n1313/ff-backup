@@ -1,9 +1,9 @@
 const path = require('path');
 const fs = require('fs');
 
-const api = require('./request.js');
 const credentials = require('../credentials.json');
 const config = require('../config.json');
+const api = require('./api.js');
 
 const startTime = new Date();
 
@@ -21,10 +21,26 @@ if (!config.target) {
   console.log(`Targeting ${config.target}`);
 }
 
-console.log('Trying to authenticate...');
+async function main() {
+  console.log('Trying to authenticate...');
+  const session = await api.postSession();
 
-await api.get;
+  if (session && !session.err && session.users.username === credentials.username && session.authToken) {
+    console.log('Success!' /*, session.authToken*/);
+    return session;
+  } else {
+    console.error('Error: Cannot authenticate, check your username and password.');
+    console.error(session);
+    process.exit(1);
+  }
+}
 
-const endTime = new Date();
-
-console.log(`Done, took ${endTime - startTime}ms`);
+main()
+  .then((text) => {
+    const endTime = new Date();
+    console.log(`Done, took ${endTime - startTime}ms`);
+  })
+  .catch((err) => {
+    console.error(`Unexpected error: ${err}`);
+    process.exit(1);
+  });
