@@ -88,7 +88,7 @@ const getPostsTimeline = async (session) => {
     utils.writeAPIData(TIMELINE_FILE, timeline);
   }
 
-  console.log('Downloaded all available posts!');
+  console.log('\nDownloaded all available posts!');
   return timeline;
 };
 
@@ -97,7 +97,12 @@ const hydratePosts = async (session, timeline) => {
     return post.omittedComments > 0 || post.omittedLikes > 0;
   });
 
-  console.log('Downloading likes and comments for', postsWithMissingInfo.length, 'posts...');
+  if (postsWithMissingInfo.length === 0) {
+    console.log('No omitted likes and comments to download.');
+    return timeline;
+  }
+
+  console.log('Downloading omitted likes and comments for', postsWithMissingInfo.length, 'posts...');
 
   let i = 0;
 
@@ -117,7 +122,7 @@ const hydratePosts = async (session, timeline) => {
     utils.writeAPIData(TIMELINE_FILE, timeline);
   }
 
-  console.log('All posts ready!');
+  console.log('\nDownloaded all omitted likes and comments!');
   return timeline;
 };
 
@@ -132,7 +137,12 @@ const main = async () => {
 main()
   .then(() => {
     const endTime = new Date();
-    console.log(`Done, took ${endTime - startTime} ms`);
+    const duration = endTime - startTime;
+    const seconds = Math.floor((duration / 1000) % 60);
+    const minutes = Math.floor((duration / (1000 * 60)) % 60);
+    const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+    const took = (hours ? `${hours} hr ` : '') + `${minutes} min ${seconds} sec`;
+    console.log(`Done, took ${took}`);
   })
   .catch((err) => {
     console.error(err);
