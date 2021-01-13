@@ -6,7 +6,7 @@ const config = require('../config.json');
 const credentials = require('../credentials.json');
 
 const writeJSON = (filePath, obj) => {
-  const string = JSON.stringify(obj, null, 2);
+  const string = JSON.stringify(obj);
   return writeFile(filePath, string);
 };
 
