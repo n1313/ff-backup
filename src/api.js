@@ -16,7 +16,8 @@ const retrieveUser = async () => {
 };
 
 const retrievePosts = async (session, offset) => {
-  const url = `${config.server}/v2/timelines/${credentials.username}?sort=created&offset=${offset}`;
+  // const url = `${config.server}/v2/timelines/${credentials.username}?sort=created&offset=${offset}`;
+  const url = `${config.server}/v2/search?qs=from%3A${credentials.username}&offset=${offset}`;
   const headers = { Authorization: `Bearer ${session.authToken}` };
   const data = await request.get(url, { headers });
   return data;
