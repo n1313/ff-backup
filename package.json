@@ -2,10 +2,10 @@
   "name": "ff-backup",
   "version": "0.0.1",
   "description": "Friendfeed backup client",
-  "main": "src/index.js",
+  "main": "src/download.js",
   "scripts": {
-    "start": "node src/index.js",
-    "clear": "rm -rf ./data",
+    "start": "npm run download",
+    "download": "node src/download.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

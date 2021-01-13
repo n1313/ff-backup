@@ -30,8 +30,15 @@ const retrieveFullPost = async (session, post) => {
   return data;
 };
 
+const retrieveAsset = async (session, url) => {
+  const headers = { Authorization: `Bearer ${session.authToken}` };
+  const data = await request.binary(url, { headers });
+  return data;
+};
+
 module.exports = {
   retrieveUser,
   retrievePosts,
   retrieveFullPost,
+  retrieveAsset,
 };

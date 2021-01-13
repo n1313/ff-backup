@@ -1,6 +1,6 @@
 const https = require('https');
 
-const request = (method, url, options = {}) => {
+const request = (method, url, options = {}, isJSON = true) => {
   const { body, ...requestParams } = options;
   const requestConfig = {
     method,
@@ -14,7 +14,7 @@ const request = (method, url, options = {}) => {
       const chunks = [];
       res.on('data', (data) => chunks.push(data));
       res.on('end', () => {
-        const body = JSON.parse(Buffer.concat(chunks));
+        const body = isJSON ? JSON.parse(Buffer.concat(chunks)) : Buffer.concat(chunks);
         resolve(body);
       });
     });
@@ -27,6 +27,8 @@ const request = (method, url, options = {}) => {
   });
 };
 
+const binary = (url, options) => request('GET', url, options, false);
+
 const get = (url, options) => request('GET', url, options);
 
 const post = (url, options) => request('POST', url, options);
@@ -34,4 +36,5 @@ const post = (url, options) => request('POST', url, options);
 module.exports = {
   get,
   post,
+  binary,
 };

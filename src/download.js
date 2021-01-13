@@ -5,21 +5,26 @@ const utils = require('./utils.js');
 
 const startTime = new Date();
 
-const SESSION_FILE = 'user.json';
+const SESSION_FILE = 'session.json';
 const TIMELINE_FILE = 'timeline.json';
+const POSTS_FILE = 'posts.json';
+const COMMENTS_FILE = 'comments.json';
+const USERS_FILE = 'users.json';
+const ATTACHMENTS_FILE = 'attachments.json';
 
 if (!credentials.username || !credentials.password) {
-  console.error('Error: Invalid credentials, please update ./src/credentials.json with your username and password.');
+  console.error('Error: Invalid credentials, please update ./credentials.json with your username and password.');
   process.exit(1);
 } else {
   console.log(`Hello, ${credentials.username}!`);
 }
 
 if (!config.server) {
-  console.error('Error: Invalid server, please update ./src/config.json with valid server URL.');
+  console.error('Error: Invalid server, please update ./config.json with valid server URL.');
   process.exit(1);
 } else {
   console.log(`Targeting ${config.server}...`);
+  console.log(`Storing data in ${utils.getDataFolder()}...`);
 }
 
 const authenticate = async () => {
@@ -53,19 +58,30 @@ const getPostsTimeline = async (session) => {
     isLastPage: false,
   };
 
-  const storedTimeline = utils.readStoredAPIData(TIMELINE_FILE);
+  const storedUsers = utils.readStoredAPIData(USERS_FILE);
+  const storedComments = utils.readStoredAPIData(COMMENTS_FILE);
+  const storedAttachments = utils.readStoredAPIData(ATTACHMENTS_FILE);
+  const storedPosts = utils.readStoredAPIData(POSTS_FILE);
+  const storedTimeline = {
+    ...utils.readStoredAPIData(TIMELINE_FILE),
+    users: storedUsers,
+    comments: storedComments,
+    attachments: storedAttachments,
+    posts: storedPosts,
+  };
+
   if (storedTimeline.posts) {
     if (storedTimeline.isLastPage) {
-      console.log('Got full stored posts index,', Object.keys(storedTimeline.posts).length, 'posts!');
+      console.log('Got all stored posts,', Object.keys(storedTimeline.posts).length, 'posts!');
       return storedTimeline;
     } else {
-      console.log('Got partial stored posts index,', Object.keys(storedTimeline.posts).length, 'posts!');
-      downloadedPosts.posts = storedTimeline.posts;
+      console.log('Got some stored posts,', Object.keys(storedTimeline.posts).length, 'posts!');
+      timeline.posts = storedTimeline.posts;
     }
   }
 
   const expectedNumberOfPosts = Number(session.users.statistics.posts);
-  console.log('Downloading posts index, expecting to see', expectedNumberOfPosts, 'posts...');
+  console.log('Downloading posts, expecting to see about', expectedNumberOfPosts, 'posts...');
 
   while (!timeline.isLastPage) {
     const offset = Object.keys(timeline.posts).length;
@@ -85,7 +101,12 @@ const getPostsTimeline = async (session) => {
     });
     const numberOfDownloadedPosts = Object.keys(timeline.posts).length;
     utils.progressMessage(`Got ${numberOfDownloadedPosts}/${expectedNumberOfPosts}...`);
-    utils.writeAPIData(TIMELINE_FILE, timeline);
+
+    utils.writeAPIData(USERS_FILE, timeline.users);
+    utils.writeAPIData(COMMENTS_FILE, timeline.comments);
+    utils.writeAPIData(ATTACHMENTS_FILE, timeline.attachments);
+    utils.writeAPIData(POSTS_FILE, timeline.posts);
+    utils.writeAPIData(TIMELINE_FILE, { isLastPage: timeline.isLastPage });
   }
 
   console.log('\nDownloaded all available posts!');
@@ -119,19 +140,60 @@ const hydratePosts = async (session, timeline) => {
       timeline.attachments[attachment.id] = attachment;
     });
     utils.progressMessage(`Got ${++i}/${postsWithMissingInfo.length}...`);
-    utils.writeAPIData(TIMELINE_FILE, timeline);
+
+    utils.writeAPIData(USERS_FILE, timeline.users);
+    utils.writeAPIData(COMMENTS_FILE, timeline.comments);
+    utils.writeAPIData(ATTACHMENTS_FILE, timeline.attachments);
+    utils.writeAPIData(POSTS_FILE, timeline.posts);
   }
 
   console.log('\nDownloaded all omitted likes and comments!');
   return timeline;
 };
 
-const main = async () => {
-  const data = {};
+const downloadUserpicsAndAttachments = async (session, timeline) => {
+  const userpics = [];
+  Object.values(timeline.users).forEach((user) => {
+    if (user.profilePictureLargeUrl) {
+      userpics.push(user.profilePictureLargeUrl);
+    }
+  });
+  console.log('Downloading', userpics.length, 'userpics...');
 
-  data.session = await authenticate();
-  data.timeline = await getPostsTimeline(data.session);
-  data.timeline = await hydratePosts(data.session, data.timeline);
+  await downloadFiles(session, userpics);
+
+  const attachments = [];
+  Object.values(timeline.attachments).forEach((attachment) => {
+    if (attachment.url) {
+      attachments.push(attachment.url);
+    }
+    if (attachment.thumbnailUrl && attachment.thumbnailUrl !== attachment.url) {
+      attachments.push(attachment.thumbnailUrl);
+    }
+  });
+  console.log('\nDownloading', attachments.length, 'attachments...');
+
+  await downloadFiles(session, attachments);
+
+  console.log('\nDownloaded all files!');
+};
+
+const downloadFiles = async (session, urls) => {
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    if (!utils.assetFileExists(url)) {
+      const file = await api.retrieveAsset(session, url);
+      utils.writeAssetsData(url, file);
+    }
+    utils.progressMessage(`Got ${i + 1}/${urls.length}...`);
+  }
+};
+
+const main = async () => {
+  const session = await authenticate();
+  const timeline = await getPostsTimeline(session);
+  const full = await hydratePosts(session, timeline);
+  const withAttachments = await downloadUserpicsAndAttachments(session, timeline);
 };
 
 main()

@@ -1,4 +1,3 @@
 {
-  "server": "https://freefeed.net",
-  "dataFolder": "./data"
+  "server": "https://candy.freefeed.net"
 }

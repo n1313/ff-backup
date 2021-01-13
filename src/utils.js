@@ -24,14 +24,32 @@ const readFile = (filePath) => {
 
 const getDataFolder = () => {
   const serverFolder = config.server.split('//')[1];
-  return path.resolve(__dirname, '..', config.dataFolder, serverFolder, credentials.username);
+  return path.resolve(__dirname, '../data', serverFolder, credentials.username);
+};
+
+const writeAssetsData = (url, data) => {
+  const filePath = url.split('/').slice(3).join('/');
+  const absPath = path.resolve(getDataFolder(), filePath);
+  const dirname = path.dirname(absPath);
+  fs.mkdirSync(dirname, { recursive: true });
+  return writeFile(absPath, data);
+};
+
+const assetFileExists = (url) => {
+  const filePath = url.split('/').slice(3).join('/');
+  const absPath = path.resolve(getDataFolder(), filePath);
+  try {
+    fs.accessSync(absPath, fs.constants.R_OK);
+    return true;
+  } catch (err) {
+    return false;
+  }
 };
 
 const writeAPIData = (filePath, data) => {
   // console.log('Writing to', filePath);
   const absPath = path.resolve(getDataFolder(), filePath);
   const dirname = path.dirname(absPath);
-  const basename = path.basename(absPath);
   fs.mkdirSync(dirname, { recursive: true });
   return writeJSON(absPath, data);
 };
@@ -43,7 +61,7 @@ const readStoredAPIData = (filePath) => {
     fs.accessSync(absPath, fs.constants.R_OK);
     return readJSON(absPath);
   } catch (err) {
-    return {};
+    return null;
   }
 };
 
@@ -64,4 +82,7 @@ module.exports = {
   readStoredAPIData,
   isValidSession,
   progressMessage,
+  getDataFolder,
+  writeAssetsData,
+  assetFileExists,
 };
