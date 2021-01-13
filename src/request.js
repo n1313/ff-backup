@@ -1,9 +1,13 @@
 const https = require('https');
 
 const request = (method, url, options = {}, isJSON = true) => {
-  const { body, ...requestParams } = options;
+  const { body, headers = {}, ...requestParams } = options;
   const requestConfig = {
     method,
+    headers: {
+      ...headers,
+      'User-Agent': 'https://github.com/n1313/ff-backup',
+    },
     ...requestParams,
   };
 
@@ -14,8 +18,8 @@ const request = (method, url, options = {}, isJSON = true) => {
       const chunks = [];
       res.on('data', (data) => chunks.push(data));
       res.on('end', () => {
-        const body = isJSON ? JSON.parse(Buffer.concat(chunks)) : Buffer.concat(chunks);
-        resolve(body);
+        const body = Buffer.concat(chunks);
+        resolve(isJSON ? JSON.parse(body) : body);
       });
     });
     req.on('error', reject);
