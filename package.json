@@ -1,7 +1,7 @@
 {
   "name": "ff-backup",
   "version": "0.0.1",
-  "description": "Friendfeed backup client",
+  "description": "FreeFeed backup client",
   "main": "src/download.js",
   "scripts": {
     "start": "npm run download",

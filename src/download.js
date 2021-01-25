@@ -5,7 +5,6 @@ const utils = require('./utils.js');
 
 const startTime = new Date();
 
-const SESSION_FILE = 'session.json';
 const TIMELINE_FILE = 'timeline.json';
 const POSTS_FILE = 'posts.json';
 const COMMENTS_FILE = 'comments.json';
@@ -28,19 +27,11 @@ if (!config.server) {
 }
 
 const authenticate = async () => {
-  const storedSession = utils.readStoredAPIData(SESSION_FILE);
-
-  if (utils.isValidSession(storedSession)) {
-    console.log(`Got stored session data for ${credentials.username}!`);
-    return storedSession;
-  }
-
   console.log(`Trying to authenticate as ${credentials.username}...`);
   const sessionResponse = await api.retrieveUser();
 
   if (utils.isValidSession(sessionResponse)) {
     console.log('Success!');
-    utils.writeAPIData(SESSION_FILE, sessionResponse);
     return sessionResponse;
   }
 
@@ -106,7 +97,11 @@ const getPostsTimeline = async (session) => {
     utils.writeAPIData(COMMENTS_FILE, timeline.comments);
     utils.writeAPIData(ATTACHMENTS_FILE, timeline.attachments);
     utils.writeAPIData(POSTS_FILE, timeline.posts);
-    utils.writeAPIData(TIMELINE_FILE, { isLastPage: timeline.isLastPage });
+    utils.writeAPIData(TIMELINE_FILE, {
+      isLastPage: timeline.isLastPage,
+      now: new Date(),
+      username: credentials.username,
+    });
   }
 
   console.log('\nDownloaded all available posts!');
