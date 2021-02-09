@@ -124,7 +124,7 @@ const hydratePosts = async (session, timeline) => {
 
   for (post of postsWithMissingInfo) {
     const fullPost = await api.retrieveFullPost(session, post);
-    timeline.posts[post.id] = fullPost;
+    timeline.posts[post.id] = fullPost.posts;
     fullPost.users.forEach((user) => {
       timeline.users[user.id] = user;
     });
