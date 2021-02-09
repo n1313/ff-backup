@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/x-icon" href="https://freefeed.net/assets/images/favicon.ico" />
+    <title>FreeFeed backup (@$USERNAME)</title>
+    <style type="text/css">
+      body {
+        font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.42857;
+        color: #333;
+      }
+      p {
+        margin: 0 0 1em 0;
+      }
+      #main {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 0 15px;
+      }
+      header {
+        display: flex;
+        border-bottom: 1px solid #ccc;
+      }
+      .profile-userpic {
+        flex: 0;
+        width: 75px;
+        height: 75px;
+        border-radius: 2px;
+        border: 1px solid #c1c1c1;
+      }
+      .profile-content {
+        flex: 1;
+        padding-left: 1em;
+      }
+      .profile-screenname {
+        margin: 0;
+        font-size: 1.7em;
+        color: #333;
+        font-weight: normal;
+      }
+      .profile-username {
+        margin: 0;
+        color: #777;
+        font-size: 14px;
+        font-weight: normal;
+      }
+      .profile-you {
+        color: #777;
+      }
+      .profile-description {
+        color: #333;
+      }
+      .post {
+        word-wrap: break-word;
+        color: #000;
+        font-size: 16px;
+        line-height: 20px;
+        padding-bottom: 1em;
+        margin-bottom: 1em;
+        border-bottom: 1px solid #eee;
+      }
+      .post-userpic {
+        float: left;
+      }
+      .post-userpic-img {
+        width: 50px;
+        height: 50px;
+        border-radius: 2px;
+        border: 1px solid #c1c1c1;
+      }
+      .post-content {
+        margin-left: 63px;
+      }
+      .post-targets {
+        color: #666;
+        margin-bottom: 0.5em;
+        font-size: 15px;
+      }
+      .post-target {
+        color: #333;
+        font-weight: bold;
+      }
+      .post-target + .post-target::before {
+        content: ', ';
+      }
+      .post-body {
+        font-size: 16px;
+        line-height: 20px;
+      }
+      .post-footer {
+        font-size: 14px;
+      }
+      .post-link-original {
+        color: #666;
+      }
+      .post-likes {
+        color: #666;
+      }
+      .heart {
+        color: #ffb914;
+      }
+      .post-like {
+        color: #333;
+      }
+      .post-like + .post-like::before {
+        content: ', ';
+      }
+      .post-comments {
+        padding: 0 0 0 2em;
+        margin-top: 0.5em;
+      }
+      .post-attachments {
+        list-style: none;
+        padding: 0;
+        margin-top: 1em;
+      }
+      .post-attachment {
+        display: inline-block;
+        margin: 1px;
+      }
+      .post-attachment-link {
+        border: 1px solid silver;
+        padding: 1px;
+        display: block;
+      }
+      .post-attachment-img {
+        max-width: 525px;
+        max-height: 175px;
+        background-color: #fff;
+        display: block;
+      }
+      .comment {
+        font-size: 14px;
+        line-height: 18px;
+        word-wrap: break-word;
+        color: #666;
+        margin-bottom: 0.5em;
+      }
+      .comment-body,
+      .comment-body p,
+      .comment-footer {
+        display: inline;
+      }
+      .comment-footer {
+        white-space: nowrap;
+      }
+      .comment-body p + p::before {
+        content: '';
+        display: block;
+        padding-bottom: 0.5em;
+      }
+      .comment-author {
+        color: #333;
+      }
+      .comment-author::before {
+        content: ' - ';
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <header>
+        <img src="./$USERPIC" alt="$USERNAME's profile picture" class="profile-userpic" />
+        <div class="profile-content">
+          <h1 class="profile-screenname">$SCREENNAME</h1>
+          <h2 class="profile-username">@$USERNAME</h2>
+          <div class="profile-you">It's you!</div>
+          <p class="profile-description">$DESCRIPTION</p>
+        </div>
+      </header>
+      <h2>Calendar</h2>
+      <section>$CALENDAR</section>
+      <h2>Posts</h2>
+      <section>$POSTSINDEX</section>
+      <h2>Direct messages</h2>
+      <section>$DIRECTSINDEX</section>
+      <footer>Backup of $POSTSCOUNT posts by $USERNAME from $SERVER, made on $NOW. Source: <a href="https://github.com/n1313/ff-backup">GitHub</a></a></footer>
+    </div>
+    <script type="text/javascript"></script>
+  </body>
+</html>

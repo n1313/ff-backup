@@ -5,8 +5,15 @@ const readline = require('readline');
 const config = require('../config.json');
 const credentials = require('../credentials.json');
 
-const writeJSON = (filePath, obj) => {
-  const string = JSON.stringify(obj);
+const TIMELINE_FILE = 'json/timeline.json';
+const POSTS_FILE = 'json/posts.json';
+const COMMENTS_FILE = 'json/comments.json';
+const USERS_FILE = 'json/users.json';
+const ATTACHMENTS_FILE = 'json/attachments.json';
+const FEEDS_FILE = 'json/feeds.json';
+
+const writeJSON = (filePath, obj, beautify = 1) => {
+  const string = JSON.stringify(obj, null, beautify ? 2 : 0);
   return writeFile(filePath, string);
 };
 
@@ -27,8 +34,12 @@ const getDataFolder = () => {
   return path.resolve(__dirname, '../data', serverFolder, credentials.username);
 };
 
+const getAssetPath = (url = '') => {
+  return url.split('/').slice(3).join('/');
+};
+
 const writeAssetsData = (url, data) => {
-  const filePath = url.split('/').slice(3).join('/');
+  const filePath = getAssetPath(url);
   const absPath = path.resolve(getDataFolder(), filePath);
   const dirname = path.dirname(absPath);
   fs.mkdirSync(dirname, { recursive: true });
@@ -47,7 +58,6 @@ const assetFileExists = (url) => {
 };
 
 const writeAPIData = (filePath, data) => {
-  // console.log('Writing to', filePath);
   const absPath = path.resolve(getDataFolder(), filePath);
   const dirname = path.dirname(absPath);
   fs.mkdirSync(dirname, { recursive: true });
@@ -55,7 +65,6 @@ const writeAPIData = (filePath, data) => {
 };
 
 const readStoredAPIData = (filePath) => {
-  // console.log('Reading from', filePath);
   const absPath = path.resolve(getDataFolder(), filePath);
   try {
     fs.accessSync(absPath, fs.constants.R_OK);
@@ -77,12 +86,64 @@ const progressMessage = (message) => {
   process.stdout.write(message);
 };
 
+const isDirect = (post, feeds) => {
+  const directRecipients = post.postedTo.filter((subscriptionId) => {
+    const subscriptionType = (feeds[subscriptionId] || {}).name;
+    return subscriptionType === 'Directs';
+  });
+  const isDirect = directRecipients.length > 0;
+  return isDirect;
+};
+
+const templateCache = {};
+const template = (name, data = {}) => {
+  let templateHTML;
+  if (templateCache[name]) {
+    templateHTML = templateCache[name];
+  } else {
+    templateHTML = fs.readFileSync(`./src/templates/${name}.html`, 'utf8');
+    templateCache[name] = templateHTML;
+  }
+  Object.keys(data).forEach((key) => {
+    const templateKey = key.toLocaleUpperCase();
+    templateHTML = templateHTML.replace(new RegExp(`\\$${templateKey}`, 'g'), String(data[key]));
+  });
+  return templateHTML.trim();
+};
+
+const writeHTMLData = (filePath, data) => {
+  const absPath = path.resolve(getDataFolder(), filePath);
+  const dirname = path.dirname(absPath);
+  fs.mkdirSync(dirname, { recursive: true });
+  return writeFile(absPath, data);
+};
+
+const readableDate = (date) => {
+  return date.toLocaleDateString('en-GB');
+};
+
+const safeText = (string) => {
+  return string.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
+};
+
 module.exports = {
+  TIMELINE_FILE,
+  POSTS_FILE,
+  COMMENTS_FILE,
+  USERS_FILE,
+  ATTACHMENTS_FILE,
+  FEEDS_FILE,
   writeAPIData,
   readStoredAPIData,
   isValidSession,
   progressMessage,
   getDataFolder,
+  getAssetPath,
   writeAssetsData,
   assetFileExists,
+  isDirect,
+  template,
+  writeHTMLData,
+  readableDate,
+  safeText,
 };

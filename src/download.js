@@ -5,11 +5,7 @@ const utils = require('./utils.js');
 
 const startTime = new Date();
 
-const TIMELINE_FILE = 'timeline.json';
-const POSTS_FILE = 'posts.json';
-const COMMENTS_FILE = 'comments.json';
-const USERS_FILE = 'users.json';
-const ATTACHMENTS_FILE = 'attachments.json';
+const { TIMELINE_FILE, POSTS_FILE, COMMENTS_FILE, USERS_FILE, ATTACHMENTS_FILE, FEEDS_FILE } = utils;
 
 if (!credentials.username || !credentials.password) {
   console.error('Error: Invalid credentials, please update ./credentials.json with your username and password.');
@@ -46,6 +42,7 @@ const getPostsTimeline = async (session) => {
     comments: {},
     attachments: {},
     posts: {},
+    feeds: {},
     isLastPage: false,
   };
 
@@ -53,12 +50,14 @@ const getPostsTimeline = async (session) => {
   const storedComments = utils.readStoredAPIData(COMMENTS_FILE);
   const storedAttachments = utils.readStoredAPIData(ATTACHMENTS_FILE);
   const storedPosts = utils.readStoredAPIData(POSTS_FILE);
+  const storedFeeds = utils.readStoredAPIData(FEEDS_FILE);
   const storedTimeline = {
     ...utils.readStoredAPIData(TIMELINE_FILE),
     users: storedUsers,
     comments: storedComments,
     attachments: storedAttachments,
     posts: storedPosts,
+    feeds: storedFeeds,
   };
 
   if (storedTimeline.posts) {
@@ -84,11 +83,17 @@ const getPostsTimeline = async (session) => {
     timelineResponse.users.forEach((user) => {
       timeline.users[user.id] = user;
     });
+    timelineResponse.subscribers.forEach((user) => {
+      timeline.users[user.id] = user;
+    });
     timelineResponse.comments.forEach((comment) => {
       timeline.comments[comment.id] = comment;
     });
     timelineResponse.attachments.forEach((attachment) => {
       timeline.attachments[attachment.id] = attachment;
+    });
+    timelineResponse.subscriptions.forEach((feed) => {
+      timeline.feeds[feed.id] = feed;
     });
     const numberOfDownloadedPosts = Object.keys(timeline.posts).length;
     utils.progressMessage(`Got ${numberOfDownloadedPosts}/${expectedNumberOfPosts}...`);
@@ -97,6 +102,7 @@ const getPostsTimeline = async (session) => {
     utils.writeAPIData(COMMENTS_FILE, timeline.comments);
     utils.writeAPIData(ATTACHMENTS_FILE, timeline.attachments);
     utils.writeAPIData(POSTS_FILE, timeline.posts);
+    utils.writeAPIData(FEEDS_FILE, timeline.feeds);
     utils.writeAPIData(TIMELINE_FILE, {
       isLastPage: timeline.isLastPage,
       now: new Date(),
@@ -126,6 +132,9 @@ const hydratePosts = async (session, timeline) => {
     const fullPost = await api.retrieveFullPost(session, post);
     timeline.posts[post.id] = fullPost.posts;
     fullPost.users.forEach((user) => {
+      timeline.users[user.id] = user;
+    });
+    fullPost.subscribers.forEach((user) => {
       timeline.users[user.id] = user;
     });
     fullPost.comments.forEach((comment) => {

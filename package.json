@@ -4,8 +4,9 @@
   "description": "FreeFeed backup client",
   "main": "src/download.js",
   "scripts": {
-    "start": "npm run download",
-    "download": "node src/download.js",
+    "start": "npm run download && npm run build",
+    "download": "node ./src/download.js",
+    "build": "node ./src/build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
