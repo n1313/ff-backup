@@ -11,8 +11,6 @@ const request = (method, url, options = {}, isJSON = true) => {
     ...requestParams,
   };
 
-  // console.debug('Sending', method, url);
-
   return new Promise((resolve, reject) => {
     const req = https.request(url, requestConfig, (res) => {
       const chunks = [];

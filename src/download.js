@@ -7,8 +7,10 @@ const startTime = new Date();
 
 const { TIMELINE_FILE, POSTS_FILE, COMMENTS_FILE, USERS_FILE, ATTACHMENTS_FILE, FEEDS_FILE } = utils;
 
-if (!credentials.username || !credentials.password) {
-  console.error('Error: Invalid credentials, please update ./credentials.json with your username and password.');
+if (!credentials.username || !credentials.appToken) {
+  console.error(
+    'Error: Invalid credentials, please update ./credentials.json with your username and app token. Check README.md for instructions.'
+  );
   process.exit(1);
 } else {
   console.log(`Hello, ${credentials.username}!`);
@@ -18,8 +20,8 @@ if (!config.server) {
   console.error('Error: Invalid server, please update ./config.json with valid server URL.');
   process.exit(1);
 } else {
-  console.log(`Targeting ${config.server}...`);
   console.log(`Storing data in ${utils.getDataFolder()}...`);
+  console.log(`Targeting ${config.server}...`);
 }
 
 const authenticate = async () => {
@@ -75,7 +77,7 @@ const getPostsTimeline = async (session) => {
 
   while (!timeline.isLastPage) {
     const offset = Object.keys(timeline.posts).length;
-    const timelineResponse = await api.retrievePosts(session, offset);
+    const timelineResponse = await api.retrievePosts(offset);
     timeline.isLastPage = timelineResponse.isLastPage;
     timelineResponse.posts.forEach((post) => {
       timeline.posts[post.id] = post;
@@ -129,7 +131,7 @@ const hydratePosts = async (session, timeline) => {
   let i = 0;
 
   for (post of postsWithMissingInfo) {
-    const fullPost = await api.retrieveFullPost(session, post);
+    const fullPost = await api.retrieveFullPost(post);
     timeline.posts[post.id] = fullPost.posts;
     fullPost.users.forEach((user) => {
       timeline.users[user.id] = user;
@@ -186,7 +188,7 @@ const downloadFiles = async (session, urls) => {
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
     if (!utils.assetFileExists(url)) {
-      const file = await api.retrieveAsset(session, url);
+      const file = await api.retrieveAsset(url);
       utils.writeAssetsData(url, file);
     }
     utils.progressMessage(`Got ${i + 1}/${urls.length}...`);

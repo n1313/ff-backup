@@ -75,9 +75,7 @@ const readStoredAPIData = (filePath) => {
 };
 
 const isValidSession = (session) => {
-  return (
-    session && !session.err && session.users && session.users.username === credentials.username && session.authToken
-  );
+  return session && !session.err && session.users && session.users.username === credentials.username;
 };
 
 const progressMessage = (message) => {
