@@ -136,7 +136,7 @@ const renderPostLikes = (likes) => {
   });
 };
 
-const renderShortPost = (post) => {
+const renderPost = (post) => {
   const postTarget = getUserByFeedId(post.postedTo[0]);
 
   return utils.template('post', {
@@ -158,7 +158,7 @@ const renderShortPost = (post) => {
 };
 
 const renderDirect = (direct) => {
-  return utils.template('direct', { post: renderShortPost(direct) });
+  return utils.template('direct', { post: renderPost(direct) });
 };
 
 const renderCalendar = (posts) => {
@@ -203,6 +203,7 @@ const renderCalendar = (posts) => {
               'December',
             ][month],
             posts: posts.length,
+            year: year,
             firstPostId: posts[0],
           });
         })
@@ -216,22 +217,60 @@ const renderCalendar = (posts) => {
     .join('');
 };
 
-const renderMainPage = (posts, directs) => {
-  console.log('Generating main page....');
-
-  const postsIndexHTML = posts.map((post) => renderShortPost(post)).join('');
-  const directsIndexHTML = directs.map((direct) => renderDirect(direct)).join('');
-
-  const indexHTML = utils.template('index', {
+const renderPageHeader = () => {
+  return utils.template('header', {
     username: me.username,
     screenname: utils.safeText(me.screenName),
     userpic: utils.getAssetPath(me.profilePictureLargeUrl),
     description: renderUserText(me.description),
+  });
+};
+
+const renderPostPages = (posts) => {
+  const years = {};
+  posts.forEach((post) => {
+    const createdAt = new Date(+post.createdAt);
+    const year = createdAt.getFullYear();
+    years[year] = years[year] || [];
+    years[year].push(post);
+  });
+
+  Object.keys(years).forEach((year) => {
+    console.log('Generating', year, 'page...');
+    const yearHTML = utils.template('year', {
+      styles: utils.template('styles'),
+      username: me.username,
+      header: renderPageHeader(),
+      year,
+      posts: years[year].map((post) => renderPost(post)).join(''),
+    });
+    utils.writeHTMLData(`${year}.html`, yearHTML);
+  });
+};
+
+const renderDirectPage = (directs) => {
+  console.log('Generating directs page....');
+
+  const indexHTML = utils.template('directs', {
+    styles: utils.template('styles'),
+    username: me.username,
+    header: renderPageHeader(),
+    directs: directs.map((direct) => renderDirect(direct)).join(''),
+  });
+
+  utils.writeHTMLData('directs.html', indexHTML);
+};
+
+const renderMainPage = (posts, directs) => {
+  console.log('Generating main page....');
+
+  const indexHTML = utils.template('index', {
+    styles: utils.template('styles'),
+    username: me.username,
+    header: renderPageHeader(),
     server: config.server,
     postsCount: posts.length,
     now: utils.readableDate(new Date()),
-    postsIndex: postsIndexHTML,
-    directsIndex: directsIndexHTML,
     calendar: renderCalendar(posts),
   });
 
@@ -252,7 +291,9 @@ const buildApp = () => {
       }
     });
 
-  renderMainPage(posts, directs);
+  renderMainPage(posts);
+  renderPostPages(posts);
+  renderDirectPage(directs);
 };
 
 const main = async () => {
@@ -264,8 +305,7 @@ main()
   .then(() => {
     const endTime = new Date();
     const duration = endTime - startTime;
-    const seconds = Math.floor((duration / 1000) % 60);
-    console.log(`Done, took ${seconds} sec`);
+    console.log(`Done, took ${duration} ms`);
   })
   .catch((err) => {
     console.error(err);
