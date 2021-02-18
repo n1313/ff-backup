@@ -32,6 +32,10 @@ const readData = () => {
 
 const getUserByFeedId = (feedId) => {
   const feed = data.feeds[feedId];
+  if (!feed) {
+    console.error('Could not find feed', feedId);
+    return {};
+  }
   const user = data.users[feed.user];
   return user;
 };
@@ -49,7 +53,7 @@ const renderUserText = (text) => {
 };
 
 const renderPostTargets = (post) => {
-  const postToSelfOnly = post.postedTo.length === 1 && getUserByFeedId(post.postedTo).id === me.id;
+  const postToSelfOnly = post.postedTo.length === 1 && getUserByFeedId(post.postedTo[0]).id === me.id;
   if (postToSelfOnly) {
     return '';
   }
@@ -68,6 +72,11 @@ const renderPostAttachments = (post) => {
     attachments: post.attachments
       .map((id) => {
         const attachment = data.attachments[id];
+
+        if (!attachment) {
+          console.error('Could not find attachment', id, 'for post', post.id);
+          return 'Attachment not downloaded';
+        }
 
         if (attachment.mediaType === 'image') {
           return utils.template('post-attachment-image', {
@@ -109,6 +118,10 @@ const renderPostComments = (comments) => {
     comments: comments
       .map((commentId) => {
         const comment = data.comments[commentId];
+        if (!comment) {
+          console.error('Could not find comment', commentId);
+          return 'Comment not downloaded';
+        }
         return utils.template('post-comment', {
           id: comment.id,
           text: renderUserText(comment.body),
@@ -128,8 +141,13 @@ const renderPostLikes = (likes) => {
   return utils.template('post-likes', {
     likers: likes
       .map((userId) => {
+        const user = data.users[userId];
+        if (!user) {
+          console.error('Could not find user', userId);
+          return 'User not downloaded';
+        }
         return utils.template('post-like', {
-          username: data.users[userId].username,
+          username: user.username,
         });
       })
       .join(''),
