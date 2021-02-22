@@ -41,12 +41,19 @@ const getUserByFeedId = (feedId) => {
 };
 
 const renderUserText = (text) => {
+  const linkRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  const spoilerRegex = /&lt;spoiler&gt;((?:(?!(&lt;spoiler&gt;|&lt;\/spoiler&gt;)).)*)&lt;\/spoiler&gt;/gi;
+
   return text
-    .split('\n\n')
+    .split(/\n{2,}/g)
     .filter(Boolean)
     .map((string) => {
       return utils.template('paragraph', {
-        text: utils.safeText(string).replace(/\n/g, utils.template('linebreak')),
+        text: utils
+          .safeText(string)
+          .replace(/\n/g, utils.template('linebreak'))
+          .replace(linkRegex, (url) => utils.template('link', { url }))
+          .replace(spoilerRegex, (_, text) => utils.template('spoiler', { text })),
       });
     })
     .join('');
