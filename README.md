@@ -4,11 +4,12 @@ Local (as in "runs on your computer") backup tool for Freefeed. Will download al
 
 ## How to use
 
-Prerequisites: [NodeJS](https://nodejs.org/en/), [git](https://git-scm.com/downloads).
+Prerequisites: [NodeJS](https://nodejs.org/en/).
 
-1. Clone this repo
-1. Generate an application token [here](https://freefeed.net/settings/app-tokens/create?title=ff-backup&scopes=read-my-info%20read-feeds). Put your username and app token into `credentials.json`
-1. Run `npm run start` and wait for it to complete
+1. Download this repository [as a zip file](https://github.com/n1313/ff-backup/archive/master.zip) and unzip it into a folder (or clone the repo).
+1. Generate an application token [here](https://freefeed.net/settings/app-tokens/create?title=ff-backup&scopes=read-my-info%20read-feeds). Put your username and app token into `credentials.json`.
+1. Open your terminal console, navigate to the folder where you put this repository, and type `npm run start`. Wait for it to complete.
+1. Your backup will be in `data` subfolder.
 
 Downloading all of your data and attachments might take quite a bit of time, depending on the size of your feed and your geographical location (Europe is fastest). The script is tolerant to interruptions, and will continue if restarted. You can backup as many users as you want from as many servers as you want, and the backups will be kept in separate folders.
 
