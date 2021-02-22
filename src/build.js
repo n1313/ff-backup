@@ -52,8 +52,8 @@ const renderUserText = (text) => {
         text: utils
           .safeText(string)
           .replace(/\n/g, utils.template('linebreak'))
-          .replace(linkRegex, (url) => utils.template('link', { url }))
-          .replace(spoilerRegex, (_, text) => utils.template('spoiler', { text })),
+          .replace(spoilerRegex, (_, text) => utils.template('spoiler', { text }))
+          .replace(linkRegex, (url) => utils.template('link', { url })),
       });
     })
     .join('');
