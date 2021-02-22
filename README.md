@@ -4,6 +4,7 @@ Local (as in "runs on your computer") backup tool for Freefeed. Will download al
 
 ## How to use
 
+1. Make sure you have [NodeJS](https://nodejs.org/en/) installed
 1. Clone this repo
 1. Create an application token by clicking [here](https://freefeed.net/settings/app-tokens/create?title=ff-backup&scopes=read-my-info%20read-feeds). Add your username and app token into `credentials.json`
 1. Run `npm run start` and wait for it to complete
