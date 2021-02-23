@@ -27,6 +27,11 @@
   section {
     margin-bottom: 40px;
   }
+  footer {
+    padding-top: 20px;
+    margin-top: 40px;
+    border-top: 1px solid #ccc;
+  }
 
   .profile-userpic {
     flex: 0;
@@ -58,10 +63,11 @@
     color: #333;
   }
 
-  .year {
+  .year h3 {
+    margin-bottom: 0.3em;
   }
-  .month {
-    margin-right: 1em;
+  .month + .month::before {
+    content: ', ';
   }
 
   .post {

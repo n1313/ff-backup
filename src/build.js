@@ -295,6 +295,7 @@ const renderMainPage = (posts, directs) => {
     header: renderPageHeader(),
     server: config.server,
     postsCount: posts.length,
+    directsCount: directs.length,
     now: utils.readableDate(new Date()),
     calendar: renderCalendar(posts),
   });
@@ -316,7 +317,7 @@ const buildApp = () => {
       }
     });
 
-  renderMainPage(posts);
+  renderMainPage(posts, directs);
   renderPostPages(posts);
   renderDirectPage(directs);
 };
