@@ -22,3 +22,7 @@ The tool doesn't have complete feature parity with the official client when it c
 ## Using with other instances
 
 This tool is configured to work with https://freefeed.net by default. To run the script against other Freefeed instances (e.g. candy or your local dev server) update server configuration in `config.json`. Note that you will need an app token with the following access rights: `Read my public profile`, `Read my user information`, and `Read feeds, including my feeds and direct messages`, issued by that server.
+
+## Feedback
+
+Please raise a Github issue for bugs or feature requests. You're welcome to write me a [direct message](https://freefeed.net/filter/direct?to=n1313) or [buy me a coffee](https://www.buymeacoffee.com/n1313).
