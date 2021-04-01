@@ -134,6 +134,7 @@ const renderPostComments = (comments) => {
           text: renderUserText(comment.body),
           author: comment.createdBy ? data.users[comment.createdBy].username : '?',
           likes: renderCommentLikes(comment),
+          createdReadable: utils.readableDate(new Date(+comment.createdAt)),
         });
       })
       .join(''),
