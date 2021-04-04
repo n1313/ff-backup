@@ -24,7 +24,7 @@ const retrieveFullPost = async (post) => {
 };
 
 const retrieveAsset = async (url) => {
-  const headers = { Authorization: `Bearer ${credentials.appToken}` };
+  const headers = {};
   const data = await request.binary(url, { headers });
   return data;
 };
