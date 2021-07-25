@@ -124,6 +124,26 @@ const safeText = (string) => {
   return string.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
 };
 
+const postSlug = (post, MAX = 50) => {
+  const bodyText = post.body.trim();
+
+  if (!bodyText) {
+    return String(post.id);
+  }
+  if (bodyText.length <= MAX) {
+    return safeText(bodyText);
+  }
+  const words = bodyText.split(' ');
+  if (words[0].length > MAX) {
+    return safeText(bodyText.slice(0, MAX - 3) + '...');
+  }
+  let sliced = '';
+  while (sliced.length + words[0].length < MAX) {
+    sliced += `${words.shift()} `;
+  }
+  return safeText(sliced.trim() + '...');
+};
+
 module.exports = {
   TIMELINE_FILE,
   POSTS_FILE,
@@ -144,4 +164,5 @@ module.exports = {
   writeHTMLData,
   readableDate,
   safeText,
+  postSlug,
 };

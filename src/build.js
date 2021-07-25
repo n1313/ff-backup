@@ -6,6 +6,21 @@ const startTime = new Date();
 
 const { TIMELINE_FILE, POSTS_FILE, COMMENTS_FILE, USERS_FILE, ATTACHMENTS_FILE, FEEDS_FILE } = utils;
 
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
 let data;
 let me;
 
@@ -40,8 +55,18 @@ const getUserByFeedId = (feedId) => {
   return user;
 };
 
+const getPostOriginalUrl = (post) => {
+  const postTarget = getUserByFeedId(post.postedTo[0]);
+  return [config.server, postTarget.username, post.id].join('/');
+};
+
+const getUserOriginalUrl = (username) => {
+  return [config.server, username].join('/');
+};
+
 const renderUserText = (text) => {
-  const linkRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  const linkRegex =
+    /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
   const spoilerRegex = /&lt;spoiler&gt;((?:(?!(&lt;spoiler&gt;|&lt;\/spoiler&gt;)).)*)&lt;\/spoiler&gt;/gi;
 
   return text
@@ -163,8 +188,6 @@ const renderPostLikes = (likes) => {
 };
 
 const renderPost = (post) => {
-  const postTarget = getUserByFeedId(post.postedTo[0]);
-
   return utils.template('post', {
     id: post.id,
     userpic: utils.getAssetPath(me.profilePictureLargeUrl),
@@ -178,7 +201,7 @@ const renderPost = (post) => {
     createdReadable: utils.readableDate(new Date(+post.createdAt)),
     postTargets: renderPostTargets(post),
     postAttachments: renderPostAttachments(post),
-    originalUrl: [config.server, postTarget.username, post.id].join('/'),
+    originalUrl: getPostOriginalUrl(post),
     url: `posts/${post.id}.html`,
   });
 };
@@ -214,20 +237,7 @@ const renderCalendar = (posts) => {
 
           return utils.template('calendar-month', {
             id: `${year}-${month}`,
-            name: [
-              'January',
-              'February',
-              'March',
-              'April',
-              'May',
-              'June',
-              'July',
-              'August',
-              'September',
-              'October',
-              'November',
-              'December',
-            ][month],
+            name: MONTHS[month],
             posts: posts.length,
             year: year,
             firstPostId: posts[0],
@@ -277,14 +287,14 @@ const renderPostPages = (posts) => {
 const renderDirectPage = (directs) => {
   console.log('Generating directs page....');
 
-  const indexHTML = utils.template('directs', {
+  const directsHTML = utils.template('directs', {
     styles: utils.template('styles'),
     username: me.username,
     header: renderPageHeader(),
     directs: directs.map((direct) => renderDirect(direct)).join(''),
   });
 
-  utils.writeHTMLData('directs.html', indexHTML);
+  utils.writeHTMLData('directs.html', directsHTML);
 };
 
 const renderMainPage = (posts, directs) => {
@@ -304,6 +314,170 @@ const renderMainPage = (posts, directs) => {
   utils.writeHTMLData('index.html', indexHTML);
 };
 
+const renderStatsPage = (posts, directs) => {
+  console.log('Generating stats page...');
+
+  let likesCount = 0;
+  let commentsCount = 0;
+  let clikesCount = 0;
+
+  let mostLiked = {
+    count: -1,
+    post: {},
+  };
+
+  let mostCommented = {
+    count: -1,
+    post: {},
+  };
+
+  let mostCliked = {
+    count: -1,
+    post: {},
+  };
+
+  const commenters = {};
+  const likers = {};
+  const postsByMonth = {};
+  let maxPostsByMonth = 0;
+
+  posts.concat(directs).forEach((entry) => {
+    const postLikes = entry.likes.length;
+    likesCount += postLikes;
+
+    if (postLikes > mostLiked.count) {
+      mostLiked = {
+        count: postLikes,
+        post: entry,
+      };
+    }
+
+    const postComments = entry.comments.length;
+    commentsCount += postComments;
+
+    if (postComments > mostCommented.count) {
+      mostCommented = {
+        count: postComments,
+        post: entry,
+      };
+    }
+
+    const postClikes = entry.commentLikes + entry.ownCommentLikes;
+    clikesCount += postClikes;
+
+    if (postClikes > mostCliked.count) {
+      mostCliked = {
+        count: postClikes,
+        post: entry,
+      };
+    }
+
+    entry.comments.forEach((commentId) => {
+      const comment = data.comments[commentId];
+      const userId = comment.createdBy;
+      if (!userId) {
+        return;
+      }
+      const user = data.users[userId];
+      commenters[user.username] = commenters[user.username] || 0;
+      commenters[user.username] += 1;
+    });
+
+    entry.likes.forEach((userId) => {
+      if (!userId) {
+        return;
+      }
+      const user = data.users[userId];
+      likers[user.username] = likers[user.username] || 0;
+      likers[user.username] += 1;
+    });
+
+    const date = new Date(+entry.createdAt);
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const key = `${year}-${month}`;
+    const label = `${MONTHS[date.getMonth()]} ${year}`;
+    postsByMonth[key] = postsByMonth[key] || { label, value: 0 };
+    postsByMonth[key].value += 1;
+    if (postsByMonth[key].value > maxPostsByMonth) {
+      maxPostsByMonth = postsByMonth[key].value;
+    }
+  });
+
+  const bestCommenters = Object.entries(commenters)
+    .sort((a, z) => {
+      return z[1] - a[1];
+    })
+    .slice(0, 10);
+
+  const bestLikers = Object.entries(likers)
+    .sort((a, z) => {
+      return z[1] - a[1];
+    })
+    .slice(0, 10);
+
+  const postsCount = posts.length;
+  const directsCount = directs.length;
+  const totalCount = postsCount + directsCount;
+
+  const totals = {
+    firstPostDate: utils.readableDate(new Date(+posts[0].createdAt)),
+    postsCount,
+    directsCount,
+    commentsCount,
+    commentsAvg: totalCount > 0 ? (commentsCount / totalCount).toFixed(1) : 0,
+    likesCount,
+    likesAvg: totalCount > 0 ? (likesCount / totalCount).toFixed(1) : 0,
+    clikesCount,
+    clikesAvg: totalCount > 0 ? (clikesCount / totalCount).toFixed(1) : 0,
+  };
+
+  const bests = {
+    mostLikes: mostLiked.count,
+    mostLikedUrl: getPostOriginalUrl(mostLiked.post),
+    mostLikedBody: utils.postSlug(mostLiked.post),
+    mostComments: mostCommented.count,
+    mostCommentedId: mostCommented.post.id,
+    mostCommentedUrl: getPostOriginalUrl(mostCommented.post),
+    mostCommentedBody: utils.postSlug(mostCommented.post),
+    mostClikes: mostCliked.count,
+    mostClikedUrl: getPostOriginalUrl(mostCliked.post),
+    mostClikedBody: utils.postSlug(mostCliked.post),
+  };
+
+  const people = {
+    commenters: bestCommenters
+      .map(([username, count]) =>
+        utils.template('stats-commenter', { username, count, url: getUserOriginalUrl(username) })
+      )
+      .join(', '),
+    likers: bestLikers
+      .map(([username, count]) => utils.template('stats-liker', { username, count, url: getUserOriginalUrl(username) }))
+      .join(', '),
+  };
+
+  const statsHTML = utils.template('stats', {
+    styles: utils.template('styles'),
+    username: me.username,
+    header: renderPageHeader(),
+    totals: utils.template('stats-totals', totals),
+    bests: utils.template('stats-bests', bests),
+    people: utils.template('stats-people', people),
+    postsByMonth: utils.template('stats-posts-by-month', {
+      chart: utils.template('stats-chart', {
+        data: Object.values(postsByMonth)
+          .map(({ value, label }) => {
+            const percent = ((value * 100) / maxPostsByMonth) * (2 / 3);
+            return utils.template('stats-chart-item', { percent, value, label, max: value === maxPostsByMonth });
+          })
+          .join(''),
+      }),
+    }),
+  });
+
+  utils.writeHTMLData('stats.html', statsHTML);
+};
+
 const buildApp = () => {
   const posts = [];
   const directs = [];
@@ -321,6 +495,7 @@ const buildApp = () => {
   renderMainPage(posts, directs);
   renderPostPages(posts);
   renderDirectPage(directs);
+  renderStatsPage(posts, directs);
 };
 
 const main = async () => {

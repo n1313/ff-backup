@@ -7,7 +7,7 @@ const REPO_URL = 'https://github.com/n1313/ff-backup';
 const checkForLatestRelease = async () => {
   const latestRelease = await request.get(LATEST_RELEASE_URL);
   if (latestRelease && latestRelease.tag_name) {
-    if (latestRelease.tag_name !== packageJson.version) {
+    if (latestRelease.tag_name !== `v${packageJson.version}`) {
       console.log('There is an update available');
       console.log('Current version is', packageJson.version);
       console.log('Latest version is', latestRelease.tag_name);
