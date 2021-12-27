@@ -279,7 +279,7 @@ const renderPageHeader = () => {
 const renderPostPages = (posts) => {
   const years = {};
   posts.forEach((post) => {
-    const createdAt = new Date(+post.createdAt);
+    const createdAt = new Date(+post.createdAt || 0);
     const year = createdAt.getFullYear();
     years[year] = years[year] || [];
     years[year].push(post);
