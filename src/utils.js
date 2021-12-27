@@ -125,7 +125,7 @@ const safeText = (string) => {
 };
 
 const postSlug = (post, MAX = 50) => {
-  const bodyText = post.body.trim();
+  const bodyText = (post.body || '').trim();
 
   if (!bodyText) {
     return String(post.id);

@@ -4,7 +4,7 @@
   "description": "FreeFeed backup client",
   "main": "src/download.js",
   "scripts": {
-    "start": "npm run check-release && npm run download && npm run build",
+    "start": "npm run download && npm run build && npm run check-release",
     "check-release": "node ./src/check-release.js",
     "download": "node ./src/download.js",
     "build": "node ./src/build.js",

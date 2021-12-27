@@ -13,7 +13,7 @@ Prerequisites: [NodeJS](https://nodejs.org/en/).
 
 Downloading all of your data and attachments might take quite a bit of time, depending on the size of your feed and your geographical location (Europe is fastest). The script is tolerant to interruptions, and will continue if restarted. You can backup as many users as you want from as many servers as you want, and the backups will be kept in separate folders.
 
-To refresh your backup delete all .json files from your backup data folder and re-run `npm run start`. You can keep the attachments and profilepics folders to avoid re-downloading them.
+To refresh your backup delete all .json files from your backup data folder and re-run `npm run start`. You can keep the attachments and profilepics folders to avoid re-downloading them. It is unlikely that "incremental backups" will ever be implemented, because unless we re-download all of your posts, we won't know 1. if any of them were deleted (by you), and 2. if any of them were referenced (by other people).
 
 ## Known limitations
 

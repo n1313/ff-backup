@@ -56,6 +56,9 @@ const getUserByFeedId = (feedId) => {
 };
 
 const getPostOriginalUrl = (post) => {
+  if (!post || !post.postedTo) {
+    return '';
+  }
   const postTarget = getUserByFeedId(post.postedTo[0]);
   return [config.server, postTarget.username, post.id].join('/');
 };
@@ -187,6 +190,16 @@ const renderPostLikes = (likes) => {
   });
 };
 
+const renderPostBacklinks = (count) => {
+  if (!count) {
+    return '';
+  }
+
+  return utils.template('post-backlinks', {
+    count,
+  });
+};
+
 const renderPost = (post) => {
   return utils.template('post', {
     id: post.id,
@@ -194,6 +207,7 @@ const renderPost = (post) => {
     username: me.username,
     body: renderUserText(post.body),
     postComments: renderPostComments(post.comments),
+    postBacklinks: renderPostBacklinks(post.backlinksCount),
     postLikes: renderPostLikes(post.likes),
     commentsCount: post.comments.length,
     likesCount: post.likes.length,
@@ -320,6 +334,7 @@ const renderStatsPage = (posts, directs) => {
   let likesCount = 0;
   let commentsCount = 0;
   let clikesCount = 0;
+  let backlinksCount = 0;
 
   let mostLiked = {
     count: -1,
@@ -336,6 +351,11 @@ const renderStatsPage = (posts, directs) => {
     post: {},
   };
 
+  let mostBacklinked = {
+    count: -1,
+    post: {},
+  };
+
   const commenters = {};
   const likers = {};
   const postsByMonth = {};
@@ -348,6 +368,14 @@ const renderStatsPage = (posts, directs) => {
     if (postLikes > mostLiked.count) {
       mostLiked = {
         count: postLikes,
+        post: entry,
+      };
+    }
+
+    backlinksCount += entry.backlinksCount;
+    if (entry.backlinksCount > mostBacklinked.count) {
+      mostBacklinked = {
+        count: entry.backlinksCount,
         post: entry,
       };
     }
@@ -374,6 +402,9 @@ const renderStatsPage = (posts, directs) => {
 
     entry.comments.forEach((commentId) => {
       const comment = data.comments[commentId];
+      if (!comment) {
+        return;
+      }
       const userId = comment.createdBy;
       if (!userId) {
         return;
@@ -425,6 +456,7 @@ const renderStatsPage = (posts, directs) => {
     postsCount,
     directsCount,
     commentsCount,
+    backlinksCount,
     commentsAvg: totalCount > 0 ? (commentsCount / totalCount).toFixed(1) : 0,
     likesCount,
     likesAvg: totalCount > 0 ? (likesCount / totalCount).toFixed(1) : 0,
@@ -443,6 +475,9 @@ const renderStatsPage = (posts, directs) => {
     mostClikes: mostCliked.count,
     mostClikedUrl: getPostOriginalUrl(mostCliked.post),
     mostClikedBody: utils.postSlug(mostCliked.post),
+    mostBacklinks: mostBacklinked.count,
+    mostBacklinkedUrl: getPostOriginalUrl(mostBacklinked.post),
+    mostBacklinkedBody: utils.postSlug(mostBacklinked.post),
   };
 
   const people = {
