@@ -211,8 +211,8 @@ const renderPost = (post) => {
     postLikes: renderPostLikes(post.likes),
     commentsCount: post.comments.length,
     likesCount: post.likes.length,
-    createdAt: new Date(+post.createdAt).toISOString(),
-    createdReadable: utils.readableDate(new Date(+post.createdAt)),
+    createdAt: new Date(+post.createdAt || 0).toISOString(),
+    createdReadable: utils.readableDate(new Date(+post.createdAt || 0)),
     postTargets: renderPostTargets(post),
     postAttachments: renderPostAttachments(post),
     originalUrl: getPostOriginalUrl(post),
@@ -228,7 +228,7 @@ const renderCalendar = (posts) => {
   const calendar = {};
 
   posts.forEach((post) => {
-    const createdAt = new Date(+post.createdAt);
+    const createdAt = new Date(+post.createdAt || 0);
     const year = createdAt.getFullYear();
     const month = createdAt.getMonth();
     if (!calendar[year]) {
